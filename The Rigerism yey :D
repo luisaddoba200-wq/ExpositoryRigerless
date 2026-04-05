@@ -24,10 +24,13 @@ return function(n)
             
             local h = t:FindFirstChildOfClass("Humanoid")
             if h then
-                h.CameraOffset = Vector3.new(0, 20, 40)
+                -- Seteamos la cámara al Torso/HRP sin offset raro
+                h.CameraOffset = Vector3.new(0, 0, 0) 
+                -- Forzamos a la cámara a reconocer al nuevo sujeto
+                workspace.CurrentCamera.CameraSubject = h
             end
             
-            warn("[-] System: 0x" .. string.format("%X", ID) .. " deployed.")
+            warn("[-] System: 0x" .. string.format("%X", ID) .. " DEP-02 Online.")
         end
     else
         warn("[!] Failure: " .. tostring(a))
