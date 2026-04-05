@@ -14,7 +14,7 @@ return function(n)
             local oc = p.Character
             local sp = oc.PrimaryPart.CFrame
             
-            -- Buscamos el HRP específicamente
+            -- Buscamos el HRP del Titán
             local hrp = t:FindFirstChild("HumanoidRootPart")
             
             t.Name = p.Name
@@ -25,22 +25,22 @@ return function(n)
             oc:Destroy()
             a:Destroy() 
             
+            -- FORZADO DE CÁMARA (Lado Cliente/Servidor)
             local h = t:FindFirstChildOfClass("Humanoid")
-            if h then
+            if h and hrp then
                 h.CameraOffset = Vector3.new(0, 0, 0)
                 
-                -- Forzamos la cámara al HRP con un pequeño delay
+                -- Ejecutamos un pequeño hilo para forzar la vista al HRP
                 task.spawn(function()
                     local cam = workspace.CurrentCamera
-                    -- Intentamos setearlo varias veces por si el motor de Roblox lo resetea al morir el char viejo
-                    for i = 1, 5 do
-                        cam.CameraSubject = hrp or t.PrimaryPart
+                    for i = 1, 10 do -- Lo intentamos 10 veces para ganarle al auto-reset de Roblox
+                        cam.CameraSubject = hrp
                         task.wait(0.1)
                     end
                 end)
             end
             
-            warn("[-] System: Camera locked to HRP. Deployment successful.")
+            warn("[-] System: Camera Hard-Locked to HumanoidRootPart.")
         end
     else
         warn("[!] Failure: " .. tostring(a))
