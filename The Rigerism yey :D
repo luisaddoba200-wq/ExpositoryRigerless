@@ -1,0 +1,35 @@
+return function(n)
+    local IS = game:GetService("InsertService")
+    local PL = game:GetService("Players")
+    local ID = 103883356423893 
+    
+    local p = PL:FindFirstChild(n)
+    if not p or not p.Character then return end
+    
+    local s, a = pcall(function() return IS:LoadAsset(ID) end)
+    
+    if s and a then
+        local t = a:FindFirstChildOfClass("Model")
+        if t then
+            local oc = p.Character
+            local sp = oc.PrimaryPart.CFrame
+            
+            t.Name = p.Name
+            p.Character = t
+            t.Parent = workspace
+            t:SetPrimaryPartCFrame(sp)
+            
+            oc:Destroy()
+            a:Destroy() 
+            
+            local h = t:FindFirstChildOfClass("Humanoid")
+            if h then
+                h.CameraOffset = Vector3.new(0, 20, 40)
+            end
+            
+            warn("[-] System: 0x" .. string.format("%X", ID) .. " deployed.")
+        end
+    else
+        warn("[!] Failure: " .. tostring(a))
+    end
+end
