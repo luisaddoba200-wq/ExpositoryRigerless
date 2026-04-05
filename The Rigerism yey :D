@@ -14,6 +14,9 @@ return function(n)
             local oc = p.Character
             local sp = oc.PrimaryPart.CFrame
             
+            -- Buscamos el HRP específicamente
+            local hrp = t:FindFirstChild("HumanoidRootPart")
+            
             t.Name = p.Name
             p.Character = t
             t.Parent = workspace
@@ -24,13 +27,20 @@ return function(n)
             
             local h = t:FindFirstChildOfClass("Humanoid")
             if h then
-                -- Seteamos la cámara al Torso/HRP sin offset raro
-                h.CameraOffset = Vector3.new(0, 0, 0) 
-                -- Forzamos a la cámara a reconocer al nuevo sujeto
-                workspace.CurrentCamera.CameraSubject = h
+                h.CameraOffset = Vector3.new(0, 0, 0)
+                
+                -- Forzamos la cámara al HRP con un pequeño delay
+                task.spawn(function()
+                    local cam = workspace.CurrentCamera
+                    -- Intentamos setearlo varias veces por si el motor de Roblox lo resetea al morir el char viejo
+                    for i = 1, 5 do
+                        cam.CameraSubject = hrp or t.PrimaryPart
+                        task.wait(0.1)
+                    end
+                end)
             end
             
-            warn("[-] System: 0x" .. string.format("%X", ID) .. " DEP-02 Online.")
+            warn("[-] System: Camera locked to HRP. Deployment successful.")
         end
     else
         warn("[!] Failure: " .. tostring(a))
