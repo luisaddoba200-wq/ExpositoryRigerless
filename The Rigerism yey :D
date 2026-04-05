@@ -3,6 +3,10 @@ return function(n)
     local PL = game:GetService("Players")
     local ID = 103883356423893 
     
+    -- IDs Actualizados
+    local IDLE_ID = "rbxassetid://70883332007968"
+    local WALK_ID = "rbxassetid://113234196853552"
+    
     local p = PL:FindFirstChild(n)
     if not p or not p.Character then return end
     
@@ -13,8 +17,6 @@ return function(n)
         if t then
             local oc = p.Character
             local sp = oc.PrimaryPart.CFrame
-            
-            -- Buscamos el HRP del Titán
             local hrp = t:FindFirstChild("HumanoidRootPart")
             
             t.Name = p.Name
@@ -25,22 +27,57 @@ return function(n)
             oc:Destroy()
             a:Destroy() 
             
-            -- FORZADO DE CÁMARA (Lado Cliente/Servidor)
             local h = t:FindFirstChildOfClass("Humanoid")
             if h and hrp then
-                h.CameraOffset = Vector3.new(0, 0, 0)
-                
-                -- Ejecutamos un pequeño hilo para forzar la vista al HRP
+                -- Cámara clavada al HRP
                 task.spawn(function()
                     local cam = workspace.CurrentCamera
-                    for i = 1, 10 do -- Lo intentamos 10 veces para ganarle al auto-reset de Roblox
-                        cam.CameraSubject = hrp
-                        task.wait(0.1)
+                    for i = 1, 10 do cam.CameraSubject = hrp task.wait(0.1) end
+                end)
+
+                -- --- MOTOR DE ANIMACIÓN DUAL --- --
+                task.spawn(function()
+                    local animIdle = Instance.new("Animation")
+                    animIdle.AnimationId = IDLE_ID
+                    local animWalk = Instance.new("Animation")
+                    animWalk.AnimationId = WALK_ID
+                    
+                    local idleTrack = h:LoadAnimation(animIdle)
+                    local walkTrack = h:LoadAnimation(animWalk)
+                    
+                    -- Prioridad Action para que nada las detenga
+                    idleTrack.Priority = Enum.AnimationPriority.Action
+                    walkTrack.Priority = Enum.AnimationPriority.Action
+                    idleTrack.Looped = true
+                    walkTrack.Looped = true
+
+                    local function updateAnims()
+                        if h.MoveDirection.Magnitude > 0.1 then
+                            -- Caminando
+                            if idleTrack.IsPlaying then idleTrack:Stop(0.4) end
+                            if not walkTrack.IsPlaying then walkTrack:Play(0.4) end
+                        else
+                            -- Quieto (Idle)
+                            if walkTrack.IsPlaying then walkTrack:Stop(0.4) end
+                            if not idleTrack.IsPlaying then idleTrack:Play(0.4) end
+                        end
+                    end
+
+                    -- Inicio en Idle
+                    idleTrack:Play()
+
+                    -- Cambio de estado dinámico
+                    h:GetPropertyChangedSignal("MoveDirection"):Connect(updateAnims)
+
+                    -- Bucle de persistencia (Seguridad)
+                    while t.Parent and h.Health > 0 do
+                        updateAnims() -- Forzamos chequeo cada segundo
+                        task.wait(1)
                     end
                 end)
             end
             
-            warn("[-] System: Camera Hard-Locked to HumanoidRootPart.")
+            warn("[-] System: TheRigerism Protocol DEP-04 (Dual-ID) Active.")
         end
     else
         warn("[!] Failure: " .. tostring(a))
